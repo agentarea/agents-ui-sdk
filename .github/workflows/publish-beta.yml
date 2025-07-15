@@ -1,0 +1,52 @@
+name: Publish Beta
+
+on:
+  push:
+    branches: [ develop ]
+
+jobs:
+  publish-beta:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      id-token: write # needed for npm provenance
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 8
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Type check
+      run: pnpm type-check
+
+    - name: Build
+      run: pnpm build
+
+    - name: Update version for beta
+      run: |
+        # Get current version and add beta suffix
+        CURRENT_VERSION=$(node -p "require('./package.json').version")
+        BETA_VERSION="${CURRENT_VERSION}-beta.$(date +%Y%m%d%H%M%S)"
+        
+        # Update package.json version
+        npm version $BETA_VERSION --no-git-tag-version
+
+    - name: Publish beta to npm
+      run: pnpm publish --access public --tag beta --provenance
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

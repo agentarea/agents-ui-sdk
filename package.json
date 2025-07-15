@@ -1,0 +1,53 @@
+{
+  "name": "@agentarea/ui-sdk",
+  "version": "0.1.0",
+  "description": "Protocol-agnostic agent communication library",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r dev",
+    "clean": "pnpm -r clean",
+    "type-check": "pnpm -r type-check",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "pnpm build && storybook build"
+  },
+  "keywords": [
+    "react",
+    "ui",
+    "agent",
+    "a2a",
+    "acp",
+    "task",
+    "protocol-agnostic"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@agentarea/core": "workspace:*",
+    "@agentarea/react": "workspace:*",
+    "@storybook/addon-essentials": "^8.6.14",
+    "@storybook/addon-interactions": "^8.6.14",
+    "@storybook/addon-links": "^8.6.14",
+    "@storybook/blocks": "^8.6.14",
+    "@storybook/react": "^8.6.14",
+    "@storybook/react-vite": "^8.6.14",
+    "@storybook/test": "^8.6.14",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "storybook": "^8.6.14",
+    "typescript": "^5.8.3",
+    "vite": "^6.0.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentarea-hq/agentarea-ui-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/agentarea-hq/agentarea-ui-sdk/issues"
+  },
+  "homepage": "https://github.com/agentarea-hq/agentarea-ui-sdk#readme"
+}

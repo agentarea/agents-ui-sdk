@@ -1,0 +1,86 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Introduction" />
+
+# AgentArea UI SDK
+
+Welcome to the **AgentArea UI SDK** - a protocol-agnostic React UI library for agent communication built with task-based interactions in mind.
+
+## Features
+
+- 🔗 **Protocol Agnostic**: Works with A2A, ACP, and custom protocols
+- 📋 **Task-Centric**: Built around task delegation rather than conversations  
+- ⚡ **Real-time**: Supports streaming and live updates
+- 🧩 **Composable**: Radix-style primitive components
+- 🔒 **Type Safe**: Full TypeScript support
+
+## Architecture
+
+This library follows a **primitive-first approach** inspired by Radix UI and assistant-ui:
+
+### Runtime Layer
+Protocol-specific implementations handle communication with agents:
+- `createA2ARuntime()` - A2A Protocol (JSON-RPC + SSE)
+- `createACPRuntime()` - ACP Protocol (REST/HTTP) 
+- `createCustomRuntime()` - Custom protocol adapters
+
+### Component Layer
+Primitive components provide building blocks for complex UIs:
+- `TaskPrimitive.*` - Task creation, progress, and results
+- `AgentPrimitive.*` - Agent information and capabilities
+
+### Hook Layer
+React hooks provide state management and protocol communication:
+- `useAgent()`, `useTask()`, `useTaskCreation()`
+
+## Getting Started
+
+```tsx
+import { 
+  AgentProvider, 
+  TaskPrimitive, 
+  createA2ARuntime 
+} from '@agentarea/ui-sdk'
+
+const runtime = createA2ARuntime({
+  endpoint: 'http://localhost:9999'
+})
+
+function App() {
+  return (
+    <AgentProvider runtime={runtime}>
+      <TaskPrimitive.Root>
+        <TaskPrimitive.Input onSubmit={handleTask} />
+        <TaskPrimitive.Send />
+        <TaskPrimitive.Progress />
+        <TaskPrimitive.Output />
+      </TaskPrimitive.Root>
+    </AgentProvider>
+  )
+}
+```
+
+## Component Categories
+
+### TaskPrimitive
+Components for creating and managing agent tasks:
+- Task creation interfaces
+- Progress tracking
+- Result display
+- Status indicators
+
+### AgentPrimitive  
+Components for agent information and capabilities:
+- Agent metadata display
+- Connection status
+- Capability listings
+- Feature indicators
+
+## Examples
+
+Visit the **examples/** directory in the repository for:
+- React application using the SDK
+- Integration patterns
+- Real-world usage scenarios
+
+Browse the stories in this Storybook to see all components in action!

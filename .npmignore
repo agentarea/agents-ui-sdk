@@ -1,0 +1,52 @@
+# Source files (we only publish built files)
+src/**/*.ts
+src/**/*.tsx
+!src/**/*.d.ts
+
+# Development files
+.github/
+examples/
+docs/
+*.md
+!README.md
+
+# Build tools
+tsconfig.json
+.eslintrc*
+.prettierrc*
+jest.config*
+rollup.config*
+webpack.config*
+
+# Development dependencies
+node_modules/
+.pnpm-store/
+
+# Environment and cache
+.env*
+.cache/
+.nyc_output/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+**/*.test.*
+**/*.spec.*
+__tests__/
+test/
+tests/

@@ -1,0 +1,55 @@
+{
+  "name": "@agentarea/core",
+  "version": "0.1.0",
+  "description": "Protocol-agnostic agent communication runtime",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "pnpm clean && tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": [
+    "agent",
+    "a2a",
+    "acp",
+    "protocol",
+    "runtime"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^24.0.13",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@a2a-js/sdk": "^0.2.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentarea-hq/agentarea-ui-sdk.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/agentarea-hq/agentarea-ui-sdk/issues"
+  },
+  "homepage": "https://github.com/agentarea-hq/agentarea-ui-sdk#readme"
+}
