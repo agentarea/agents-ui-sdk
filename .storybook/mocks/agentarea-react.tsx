@@ -84,6 +84,78 @@ export const useInputContext = () => useContext(MockInputContext)
 export const useArtifactContext = () => useContext(MockArtifactContext)
 export const useCommunicationContext = () => useContext(MockCommunicationContext)
 
+// Additional mock hooks
+export const useAgent = () => ({
+  runtime: null,
+  isConnected: true,
+  connect: async () => {},
+  disconnect: async () => {},
+  sendTask: async () => ({ taskId: 'mock-task', task: {} }),
+  error: null
+})
+
+export const useAgentCard = () => ({
+  agentCard: {
+    name: 'Demo Agent',
+    description: 'A demonstration agent for Storybook stories',
+    version: '1.0.0',
+    logoUrl: 'https://via.placeholder.com/64x64/4169e1/white?text=A'
+  },
+  loading: false,
+  error: null
+})
+
+export const useAgentCapabilities = () => ({
+  capabilities: [
+    {
+      name: 'Data Analysis',
+      description: 'Analyze datasets and generate insights',
+      inputTypes: ['csv', 'json', 'text'],
+      outputTypes: ['json', 'chart', 'report']
+    }
+  ],
+  loading: false,
+  error: null
+})
+
+export const useConnection = () => ({
+  isConnected: true,
+  connectionStatus: 'connected',
+  connect: async () => {},
+  disconnect: async () => {},
+  error: null
+})
+
+export const useTask = (taskId?: string) => ({
+  task: taskId ? {
+    id: taskId,
+    title: 'Mock Task',
+    status: 'pending',
+    progress: 0.5
+  } : null,
+  loading: false,
+  error: null,
+  cancel: async () => {},
+  retry: async () => {}
+})
+
+export const useTaskList = () => ({
+  tasks: [
+    { id: 'task-1', title: 'Mock Task 1', status: 'completed', progress: 1 },
+    { id: 'task-2', title: 'Mock Task 2', status: 'working', progress: 0.7 },
+    { id: 'task-3', title: 'Mock Task 3', status: 'pending', progress: 0 }
+  ],
+  loading: false,
+  error: null,
+  refresh: async () => {}
+})
+
+export const useTaskCreation = () => ({
+  createTask: async (input: any) => ({ taskId: 'new-task', task: {} }),
+  loading: false,
+  error: null
+})
+
 // Mock UI Components
 export const Button = React.forwardRef<
   HTMLButtonElement,
@@ -385,6 +457,69 @@ export const Task = ({ task, ...props }: any) => (
   </div>
 )
 
+// Mock Agent Primitive Components
+export const AgentPrimitive = {
+  Root: ({ children, ...props }: any) => (
+    <div className="border rounded-lg bg-background shadow-sm p-4" {...props}>
+      {children}
+    </div>
+  ),
+  Card: ({ agent, ...props }: any) => (
+    <div className="border rounded-lg bg-background shadow-sm p-4" {...props}>
+      <div className="text-sm font-medium mb-2">{agent?.name || 'Mock Agent'}</div>
+      <div className="text-sm text-muted-foreground">
+        {agent?.description || 'Mock agent description'}
+      </div>
+    </div>
+  ),
+  Status: ({ status, ...props }: any) => (
+    <div className="flex items-center gap-2" {...props}>
+      <div className={`w-2 h-2 rounded-full ${status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`} />
+      <span className="text-sm">{status || 'online'}</span>
+    </div>
+  ),
+  Capabilities: ({ capabilities, ...props }: any) => (
+    <div className="space-y-2" {...props}>
+      <div className="text-sm font-medium">Capabilities</div>
+      <div className="flex flex-wrap gap-1">
+        {(capabilities || ['Mock Capability']).map((cap: any, index: number) => (
+          <span key={index} className="text-xs bg-muted px-2 py-1 rounded">
+            {typeof cap === 'string' ? cap : cap.name}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Mock Task Primitive Components
+export const TaskPrimitive = {
+  Root: ({ children, ...props }: any) => (
+    <div className="border rounded-lg bg-background shadow-sm p-4" {...props}>
+      {children}
+    </div>
+  ),
+  Header: ({ task, ...props }: any) => (
+    <div className="flex items-center justify-between mb-2" {...props}>
+      <div className="text-sm font-medium">{task?.title || 'Mock Task'}</div>
+      <div className="text-xs text-muted-foreground">{task?.status || 'pending'}</div>
+    </div>
+  ),
+  Progress: ({ progress, ...props }: any) => (
+    <div className="w-full bg-muted rounded-full h-2" {...props}>
+      <div 
+        className="bg-primary h-2 rounded-full" 
+        style={{ width: `${(progress * 100) || 0}%` }}
+      />
+    </div>
+  ),
+  Actions: ({ children, ...props }: any) => (
+    <div className="flex gap-2 mt-2" {...props}>
+      {children}
+    </div>
+  )
+}
+
 // Mock Provider Components (these won't be used due to the alias, but included for completeness)
 export const AgentProvider = ({ children }: { children: React.ReactNode }) => (
   <MockAgentContext.Provider value={MockAgentContext._currentValue}>
@@ -422,6 +557,8 @@ export default {
   Chat,
   Block,
   Task,
+  AgentPrimitive,
+  TaskPrimitive,
   AgentProvider,
   InputProvider,
   ArtifactProvider,

@@ -37,7 +37,7 @@ const config: StorybookConfig = {
       resolve: {
         alias: {
           // Mock the @agentarea/react module for Storybook
-          '@agentarea/react': require.resolve('../.storybook/mocks/agentarea-react.ts'),
+          '@agentarea/react': require.resolve('../.storybook/mocks/agentarea-react.tsx'),
         },
       },
     })

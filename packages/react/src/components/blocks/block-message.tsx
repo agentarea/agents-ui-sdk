@@ -17,6 +17,9 @@ export interface BlockMessageProps extends React.HTMLAttributes<HTMLDivElement> 
   correlatedMessage?: ProtocolMessage | CommunicationBlock
   showCorrelation?: boolean
   isError?: boolean
+  isRequest?: boolean
+  isResponse?: boolean
+  correlationId?: string
 }
 
 const BlockMessage = React.forwardRef<HTMLDivElement, BlockMessageProps>(
@@ -45,6 +48,13 @@ const BlockMessage = React.forwardRef<HTMLDivElement, BlockMessageProps>(
         onExpand?.()
       } else {
         onCollapse?.()
+      }
+    }
+
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+      if (expandable && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault()
+        handleToggleExpand()
       }
     }
 
@@ -106,31 +116,41 @@ const BlockMessage = React.forwardRef<HTMLDivElement, BlockMessageProps>(
         className={cn(
           "border rounded-lg p-3 bg-background/50 backdrop-blur-sm",
           "transition-all duration-200 hover:bg-background/80",
+          "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
           isError && "border-destructive bg-destructive/5",
+          expandable && "cursor-pointer",
           className
         )}
+        onKeyDown={handleKeyDown}
+        tabIndex={expandable ? 0 : undefined}
+        role={expandable ? "button" : undefined}
+        aria-label={expandable ? `${isError ? 'Error message' : 'Message'} from ${sourceAgent} to ${targetAgent}. Press Enter or Space to ${expanded ? 'collapse' : 'expand'}.` : undefined}
         {...props}
       >
         {/* Header with agent routing and message type */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             {showRouting && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <span className="font-medium">{sourceAgent}</span>
-                <span>→</span>
-                <span className="font-medium">{targetAgent}</span>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground" role="group" aria-label="Message routing">
+                <span className="font-medium" aria-label="Source agent">{sourceAgent}</span>
+                <span aria-hidden="true">→</span>
+                <span className="font-medium" aria-label="Target agent">{targetAgent}</span>
               </div>
             )}
-            <Badge variant={getMessageTypeVariant(messageType)}>
+            <Badge variant={getMessageTypeVariant(messageType)} aria-label={`Message type: ${messageType}`}>
               {messageType}
             </Badge>
           </div>
           
           <div className="flex items-center gap-2">
             {showTimestamp && (
-              <span className="text-xs text-muted-foreground">
+              <time 
+                className="text-xs text-muted-foreground"
+                dateTime={message.timestamp.toISOString()}
+                aria-label={`Message sent at ${formatTimestamp(message.timestamp)}`}
+              >
                 {formatTimestamp(message.timestamp)}
-              </span>
+              </time>
             )}
             {expandable && (
               <Button
@@ -138,6 +158,8 @@ const BlockMessage = React.forwardRef<HTMLDivElement, BlockMessageProps>(
                 size="sm"
                 onClick={handleToggleExpand}
                 className="h-6 w-6 p-0"
+                aria-label={expanded ? "Collapse message details" : "Expand message details"}
+                aria-expanded={expanded}
               >
                 {expanded ? '−' : '+'}
               </Button>
@@ -261,11 +283,11 @@ const BlockProtocol = React.forwardRef<HTMLDivElement, BlockProtocolProps>(
       >
         {/* Protocol header */}
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-base">🔗</span>
-            <span className="font-semibold">{protocol.type}</span>
+          <div className="flex items-center gap-2" role="group" aria-label="Protocol information">
+            <span className="text-base" aria-hidden="true">🔗</span>
+            <span className="font-semibold" aria-label={`Protocol type: ${protocol.type}`}>{protocol.type}</span>
             {protocol.version && (
-              <Badge variant="outline">v{protocol.version}</Badge>
+              <Badge variant="outline" aria-label={`Version ${protocol.version}`}>v{protocol.version}</Badge>
             )}
           </div>
           
@@ -275,6 +297,8 @@ const BlockProtocol = React.forwardRef<HTMLDivElement, BlockProtocolProps>(
               size="sm"
               onClick={() => setExpanded(!expanded)}
               className="h-6 w-6 p-0"
+              aria-label={expanded ? "Collapse protocol details" : "Expand protocol details"}
+              aria-expanded={expanded}
             >
               {expanded ? '−' : '+'}
             </Button>
@@ -434,20 +458,24 @@ const BlockStatus = React.forwardRef<HTMLDivElement, BlockStatusProps>(
       >
         {/* Status header */}
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-base">
+          <div className="flex items-center gap-2" role="group" aria-label={`${status.type} status information`}>
+            <span className="text-base" aria-hidden="true">
               {getStatusIcon(status.type, status.state)}
             </span>
             <span className="font-semibold capitalize">{status.type} Status</span>
-            <Badge variant={getStatusVariant(status.state)}>
+            <Badge variant={getStatusVariant(status.state)} aria-label={`Status: ${status.state}`}>
               {status.state.toUpperCase()}
             </Badge>
           </div>
           
           {status.lastUpdate && (
-            <span className="text-xs text-muted-foreground">
+            <time 
+              className="text-xs text-muted-foreground"
+              dateTime={status.lastUpdate.toISOString()}
+              aria-label={`Last updated at ${status.lastUpdate.toLocaleTimeString()}`}
+            >
               {status.lastUpdate.toLocaleTimeString()}
-            </span>
+            </time>
           )}
         </div>
 
@@ -543,10 +571,10 @@ const BlockMetadata = React.forwardRef<HTMLDivElement, BlockMetadataProps>(
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <span className="text-base">📋</span>
+          <div className="flex items-center gap-2" role="group" aria-label="Metadata information">
+            <span className="text-base" aria-hidden="true">📋</span>
             <span className="font-semibold">{title}</span>
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs" aria-label={`${Object.keys(metadata).length} metadata items`}>
               {Object.keys(metadata).length} items
             </Badge>
           </div>
@@ -557,6 +585,8 @@ const BlockMetadata = React.forwardRef<HTMLDivElement, BlockMetadataProps>(
               size="sm"
               onClick={() => setExpanded(!expanded)}
               className="h-6 w-6 p-0"
+              aria-label={expanded ? "Collapse metadata details" : "Expand metadata details"}
+              aria-expanded={expanded}
             >
               {expanded ? '−' : '+'}
             </Button>

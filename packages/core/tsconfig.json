@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "es2018",
-    "lib": ["es6"],
+    "lib": ["es2020"],
+    "types": ["node"],
     "module": "esnext",
     "moduleResolution": "bundler",
     "rootDir": "./src",
@@ -15,7 +16,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "composite": true
   },
   "include": [
     "src/**/*"
