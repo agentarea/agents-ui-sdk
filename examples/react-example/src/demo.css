@@ -1,0 +1,425 @@
+/* AgentArea UI SDK Demo Styles */
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+.config-panel {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.config-panel h3 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+}
+
+.config-row {
+  margin-bottom: 1rem;
+}
+
+.config-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.config-row input,
+.config-row select {
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  min-width: 200px;
+}
+
+.config-row input:focus,
+.config-row select:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.comprehensive-demo {
+  margin-top: 2rem;
+}
+
+.demo-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.demo-header h1 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.demo-header p {
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+.demo-tabs {
+  display: flex;
+  border-bottom: 2px solid #e9ecef;
+  margin-bottom: 2rem;
+  gap: 0.5rem;
+}
+
+.tab-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6c757d;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  color: #495057;
+  background: #f8f9fa;
+}
+
+.tab-button.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+}
+
+.demo-content {
+  min-height: 600px;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.feature-card {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+}
+
+.feature-card p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.code-example {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.code-example h3 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 1rem;
+}
+
+.code-example pre {
+  background: #2d3748;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.artifacts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.artifact-demo {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.inputs-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin: 1.5rem 0;
+}
+
+.input-demo {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.input-demo h4 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+}
+
+.response-preview {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border-left: 4px solid #28a745;
+}
+
+.response-preview strong {
+  color: #155724;
+}
+
+.response-preview pre {
+  background: #e9ecef;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 0.5rem 0 0 0;
+  font-size: 0.8rem;
+  overflow-x: auto;
+}
+
+.communication-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.protocol-demo,
+.status-demo,
+.metadata-demo {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.protocol-demo h4,
+.status-demo h4,
+.metadata-demo h4 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+}
+
+.task-demo,
+.chat-demo {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.task-demo h4,
+.chat-demo h4 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+}
+
+.agent-ui-connection {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+.connection-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.connection-item:hover {
+  background: #f8f9fa;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.status-icon {
+  font-size: 0.8rem;
+}
+
+.status-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.connection-info {
+  flex: 1;
+}
+
+.connection-actions button {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #dc3545;
+  background: #fff;
+  color: #dc3545;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.connection-actions button:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+.agent-ui-debug {
+  background: #2d3748;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.debug-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.debug-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.debug-controls button {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #fff;
+}
+
+.debug-section {
+  margin-bottom: 1rem;
+}
+
+.debug-section h4 {
+  margin: 0 0 0.5rem 0;
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+.debug-section .text-xs {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.connection-debug {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.connection-debug hr {
+  border: none;
+  border-top: 1px solid #4a5568;
+  margin: 0.5rem 0;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .app {
+    background: #1a202c;
+    color: #e2e8f0;
+  }
+  
+  .config-panel {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .config-panel h3 {
+    color: #e2e8f0;
+  }
+  
+  .config-row input,
+  .config-row select {
+    background: #4a5568;
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+  
+  .feature-card,
+  .input-demo,
+  .protocol-demo,
+  .status-demo,
+  .metadata-demo,
+  .task-demo,
+  .chat-demo,
+  .agent-ui-connection {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .code-example {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .app {
+    padding: 1rem;
+  }
+  
+  .demo-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .artifacts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .config-row label {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .config-row input,
+  .config-row select {
+    width: 100%;
+    min-width: auto;
+  }
+}

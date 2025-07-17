@@ -59,7 +59,7 @@ export function InputApproval({
   
   // Parse context data from request metadata
   const context = contextData || request.metadata?.context
-  const title: string = String((request.metadata?.title as string) || request.prompt)
+  const title: string = String(request.metadata?.title || request.prompt)
   const description: string | undefined = request.metadata?.description ? String(request.metadata.description) : undefined
   const details = request.metadata?.details
   
@@ -198,12 +198,12 @@ export function InputApproval({
       </div>
       
       {/* Context display */}
-      {context && (
+      {context ? (
         <div className="p-3 bg-muted rounded-md">
           <h4 className="text-sm font-medium mb-2">Context:</h4>
           <div className="text-sm">
             {typeof context === 'string' ? (
-              <p>{String(context)}</p>
+              <p>{context}</p>
             ) : (
               <pre className="whitespace-pre-wrap text-xs">
                 {JSON.stringify(context, null, 2)}
@@ -211,10 +211,10 @@ export function InputApproval({
             )}
           </div>
         </div>
-      )}
+      ) : null}
       
       {/* Details */}
-      {details && (
+      {details ? (
         <div className="p-3 border rounded-md">
           <h4 className="text-sm font-medium mb-2">Details:</h4>
           <div className="text-sm">
@@ -227,7 +227,7 @@ export function InputApproval({
             )}
           </div>
         </div>
-      )}
+      ) : null}
       
       {/* Errors */}
       {hasErrors && (

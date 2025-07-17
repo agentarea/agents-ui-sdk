@@ -125,7 +125,7 @@ export function ArtifactFallback({
         {'createdAt' in artifact && artifact.createdAt && (
           <div className="flex justify-between">
             <span className="text-muted-foreground">Created:</span>
-            <span>{new Date(artifact.createdAt as string).toLocaleString()}</span>
+            <span>{new Date(artifact.createdAt as string | number | Date).toLocaleString()}</span>
           </div>
         )}
       </div>
