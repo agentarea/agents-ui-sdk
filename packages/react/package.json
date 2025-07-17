@@ -41,7 +41,12 @@
     "react-dom": ">=18.0.0"
   },
   "dependencies": {
-    "@agentarea/core": "workspace:*"
+    "@agentarea/core": "workspace:*",
+    "@radix-ui/react-progress": "^1.1.0",
+    "@radix-ui/react-slot": "^1.1.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
     "@types/node": "^24.0.13",

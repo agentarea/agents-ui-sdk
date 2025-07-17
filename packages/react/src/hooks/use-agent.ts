@@ -12,8 +12,8 @@ export function useAgent() {
     error,
     
     // Helper methods
-    supportsStreaming: () => runtime?.supportsStreaming() ?? false,
-    supportsPushNotifications: () => runtime?.supportsPushNotifications() ?? false,
+    supportsStreaming: () => runtime?.supportsStreaming?.() ?? false,
+    supportsPushNotifications: () => runtime?.supportsPushNotifications?.() ?? false,
   }
 }
 
@@ -39,8 +39,12 @@ export function useConnection() {
   const { isConnected, error, runtime } = useAgentContext()
 
   const connect = async () => {
-    if (runtime && !isConnected) {
-      await runtime.connect(runtime.config)
+    if (runtime && !isConnected && runtime.config?.endpoint) {
+      await runtime.connect(runtime.config.endpoint, {
+        endpoint: runtime.config.endpoint,
+        authentication: runtime.config.authentication || { type: 'bearer' },
+        protocols: ['agentarea']
+      })
     }
   }
 
