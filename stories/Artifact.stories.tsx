@@ -1,6 +1,20 @@
+import React from 'react'
 import type { Meta, StoryObj } from '@storybook/react'
 import { Artifact } from '@agentarea/react'
-import type { EnhancedArtifact } from '@agentarea/core'
+
+// Mock type for Storybook
+interface EnhancedArtifact {
+  id: string
+  taskId: string
+  displayType: 'text' | 'code' | 'data' | 'file' | 'image'
+  content: any
+  mimeType: string
+  size: number
+  createdAt: Date
+  downloadable: boolean
+  shareable: boolean
+  metadata: Record<string, any>
+}
 
 const meta: Meta<typeof Artifact> = {
   title: 'Components/Artifact',

@@ -22,6 +22,10 @@ const config: StorybookConfig = {
   },
   viteFinal: async (config) => {
     return mergeConfig(config, {
+      esbuild: {
+        jsx: 'automatic',
+        jsxImportSource: 'react',
+      },
       css: {
         postcss: {
           plugins: [
@@ -36,8 +40,8 @@ const config: StorybookConfig = {
       },
       resolve: {
         alias: {
-          // Mock the @agentarea/react module for Storybook
-          '@agentarea/react': require.resolve('../.storybook/mocks/agentarea-react.tsx'),
+          '@agentarea/core': require.resolve('../packages/core/src'),
+          '@agentarea/react': require.resolve('../packages/react/src'),
         },
       },
     })
