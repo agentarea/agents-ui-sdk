@@ -13,7 +13,8 @@
     "react-dom": "19.1.0",
     "next": "15.4.2",
     "@agentarea/core": "workspace:*",
-    "@agentarea/react": "workspace:*"
+    "@agentarea/react": "workspace:*",
+    "@agentarea/styles": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5",

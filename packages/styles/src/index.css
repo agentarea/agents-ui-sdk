@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* AgentArea UI Base Styles */
+@layer base {
+  :root {
+    --agentarea-background: 0 0% 100%;
+    --agentarea-foreground: 222.2 84% 4.9%;
+    --agentarea-card: 0 0% 100%;
+    --agentarea-card-foreground: 222.2 84% 4.9%;
+    --agentarea-popover: 0 0% 100%;
+    --agentarea-popover-foreground: 222.2 84% 4.9%;
+    --agentarea-primary: 222.2 84% 4.9%;
+    --agentarea-primary-foreground: 210 40% 98%;
+    --agentarea-secondary: 210 40% 96%;
+    --agentarea-secondary-foreground: 222.2 84% 4.9%;
+    --agentarea-muted: 210 40% 96%;
+    --agentarea-muted-foreground: 215.4 16.3% 46.9%;
+    --agentarea-accent: 210 40% 96%;
+    --agentarea-accent-foreground: 222.2 84% 4.9%;
+    --agentarea-destructive: 0 84.2% 60.2%;
+    --agentarea-destructive-foreground: 210 40% 98%;
+    --agentarea-border: 214.3 31.8% 91.4%;
+    --agentarea-input: 214.3 31.8% 91.4%;
+    --agentarea-ring: 222.2 84% 4.9%;
+    --agentarea-radius: 0.5rem;
+  }
+
+  .dark {
+    --agentarea-background: 222.2 84% 4.9%;
+    --agentarea-foreground: 210 40% 98%;
+    --agentarea-card: 222.2 84% 4.9%;
+    --agentarea-card-foreground: 210 40% 98%;
+    --agentarea-popover: 222.2 84% 4.9%;
+    --agentarea-popover-foreground: 210 40% 98%;
+    --agentarea-primary: 210 40% 98%;
+    --agentarea-primary-foreground: 222.2 84% 4.9%;
+    --agentarea-secondary: 222.2 84% 4.9%;
+    --agentarea-secondary-foreground: 210 40% 98%;
+    --agentarea-muted: 222.2 84% 4.9%;
+    --agentarea-muted-foreground: 215 20.2% 65.1%;
+    --agentarea-accent: 222.2 84% 4.9%;
+    --agentarea-accent-foreground: 210 40% 98%;
+    --agentarea-destructive: 0 62.8% 30.6%;
+    --agentarea-destructive-foreground: 210 40% 98%;
+    --agentarea-border: 217.2 32.6% 17.5%;
+    --agentarea-input: 217.2 32.6% 17.5%;
+    --agentarea-ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

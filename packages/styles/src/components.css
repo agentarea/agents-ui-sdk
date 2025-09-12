@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* AgentArea UI Component Utilities */
+/* These are optional utility classes that can be used alongside Tailwind */
+
+@layer components {
+  /* Chat message variants */
+  .chat-message-user {
+    @apply flex-row-reverse;
+  }
+  
+  .chat-message-agent {
+    @apply flex-row;
+  }
+  
+  .chat-message-streaming {
+    @apply animate-pulse;
+  }
+  
+  /* Task status variants */
+  .task-status-running {
+    @apply bg-blue-50 text-blue-800 border-blue-200;
+  }
+  
+  .task-status-completed {
+    @apply bg-green-50 text-green-800 border-green-200;
+  }
+  
+  .task-status-failed {
+    @apply bg-red-50 text-red-800 border-red-200;
+  }
+  
+  /* Progress bar animation */
+  .progress-indeterminate {
+    @apply animate-pulse;
+  }
+}

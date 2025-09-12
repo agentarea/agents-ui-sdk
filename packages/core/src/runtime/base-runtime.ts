@@ -102,7 +102,7 @@ export abstract class BaseRuntime implements AgentRuntime {
       throw new Error('Authentication type is required')
     }
     
-    const validTypes = ['bearer', 'api-key', 'oauth', 'openid']
+    const validTypes = ['bearer', 'api-key', 'oauth', 'openid', 'none']
     if (!validTypes.includes(auth.type)) {
       throw new Error(`Invalid authentication type: ${auth.type}`)
     }
@@ -118,6 +118,9 @@ export abstract class BaseRuntime implements AgentRuntime {
         if (!auth.apiKey) {
           throw new Error('API key is required for api-key authentication')
         }
+        break
+      case 'none':
+        // No validation required for no authentication
         break
     }
   }

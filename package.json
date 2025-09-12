@@ -7,7 +7,8 @@
     "build": "tsc --build",
     "build:core": "pnpm --filter @agentarea/core build",
     "build:react": "pnpm --filter @agentarea/react build",
-    "clean": "tsc --build --clean && pnpm -r clean",
+    "build:styles": "pnpm --filter @agentarea/styles build",
+    "clean": "tsc --build --clean",
     "dev": "pnpm -r dev",
     "type-check": "tsc --build --dry",
     "lint": "echo \"Linting not configured yet\"",
@@ -40,6 +41,7 @@
   "devDependencies": {
     "@agentarea/core": "workspace:*",
     "@agentarea/react": "workspace:*",
+    "@agentarea/styles": "workspace:*",
     "@storybook/addon-essentials": "^8.6.14",
     "@storybook/addon-interactions": "^8.6.14",
     "@storybook/addon-links": "^8.6.14",

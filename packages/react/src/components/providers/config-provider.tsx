@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+"use client"
+
+import React, { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react'
 import type { AgentUIConfig, RuntimeEnvironment, BuildEnvironment, EnvironmentCapabilities } from '@agentarea/core'
 import { useRuntimeEnvironment, useBuildEnvironment, useEnvironmentCapabilities } from '../../hooks/use-runtime-environment'
 import { createEnvironmentConfig, ConfigUtils } from '../../lib/environment-config'
@@ -72,14 +74,21 @@ export function ConfigProvider({
   const environment = useRuntimeEnvironment()
   const buildEnvironment = useBuildEnvironment()
   const capabilities = useEnvironmentCapabilities()
-  
-  const [config, setConfig] = useState<AgentUIConfig>(() => 
+
+  // Memoize user-provided config objects to stabilize references
+  const stableUserConfig = useMemo(() => userConfig, [JSON.stringify(userConfig)])
+  const stableDevConfig = useMemo(() => developmentConfig, [JSON.stringify(developmentConfig)])
+  const stableProdConfig = useMemo(() => productionConfig, [JSON.stringify(productionConfig)])
+  const stableNextConfig = useMemo(() => nextjsConfig, [JSON.stringify(nextjsConfig)])
+  const stableViteConfig = useMemo(() => viteConfig, [JSON.stringify(viteConfig)])
+
+  const [config, setConfig] = useState<AgentUIConfig>(() =>
     generateInitialConfig(
-      userConfig,
-      developmentConfig,
-      productionConfig,
-      nextjsConfig,
-      viteConfig,
+      stableUserConfig,
+      stableDevConfig,
+      stableProdConfig,
+      stableNextConfig,
+      stableViteConfig,
       environment,
       buildEnvironment,
       capabilities,
@@ -96,11 +105,11 @@ export function ConfigProvider({
   // Update configuration when environment or user config changes
   useEffect(() => {
     const newConfig = generateInitialConfig(
-      userConfig,
-      developmentConfig,
-      productionConfig,
-      nextjsConfig,
-      viteConfig,
+      stableUserConfig,
+      stableDevConfig,
+      stableProdConfig,
+      stableNextConfig,
+      stableViteConfig,
       environment,
       buildEnvironment,
       capabilities,
@@ -108,11 +117,11 @@ export function ConfigProvider({
     )
     setConfig(newConfig)
   }, [
-    userConfig,
-    developmentConfig,
-    productionConfig,
-    nextjsConfig,
-    viteConfig,
+    stableUserConfig,
+    stableDevConfig,
+    stableProdConfig,
+    stableNextConfig,
+    stableViteConfig,
     environment,
     buildEnvironment,
     capabilities,
@@ -135,22 +144,25 @@ export function ConfigProvider({
         console.error('AgentUI Configuration Errors:', result.errors)
       }
     }
-  }, [config, validateOnMount, environment, buildEnvironment, capabilities])
+  }, [config, validateOnMount, environment, buildEnvironment.mode, capabilities])
+
+  // Memoize configManager used in helpers to avoid unnecessary re-instantiation in closures
+  const configManager = useMemo(
+    () => createEnvironmentConfig(environment, buildEnvironment, capabilities),
+    [environment, buildEnvironment, capabilities]
+  )
 
   const updateConfig = (updates: Partial<AgentUIConfig>) => {
-    setConfig(prevConfig => {
-      const configManager = createEnvironmentConfig(environment, buildEnvironment, capabilities)
-      return configManager.generateConfig({ ...prevConfig, ...updates })
-    })
+    setConfig(prevConfig => configManager.generateConfig({ ...prevConfig, ...updates }))
   }
 
   const resetConfig = () => {
     const newConfig = generateInitialConfig(
-      userConfig,
-      developmentConfig,
-      productionConfig,
-      nextjsConfig,
-      viteConfig,
+      stableUserConfig,
+      stableDevConfig,
+      stableProdConfig,
+      stableNextConfig,
+      stableViteConfig,
       environment,
       buildEnvironment,
       capabilities,
@@ -187,7 +199,6 @@ export function ConfigProvider({
   }
 
   const getOptimizedConfig = (): AgentUIConfig => {
-    const configManager = createEnvironmentConfig(environment, buildEnvironment, capabilities)
     return configManager.generateConfig(config)
   }
 

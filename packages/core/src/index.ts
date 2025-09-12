@@ -1,5 +1,7 @@
-// Export all types
 export * from './types'
+
+// Export transport types for public use
+export type { RestEndpointMapping } from './transport'
 
 // Export runtime implementations with explicit re-exports to avoid conflicts
 export { BaseRuntime } from './runtime/base-runtime'

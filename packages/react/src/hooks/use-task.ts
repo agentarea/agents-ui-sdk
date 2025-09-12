@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useAgentContext } from '../components/providers/agent-provider'
 import type { 
@@ -310,9 +312,9 @@ export function useTaskInput(taskId: string) {
   const [error, setError] = useState<Error | null>(null)
 
   const task = tasks.get(taskId) as TaskWithInputs | undefined
-  const activeRequests = task?.inputRequests || []
-  const responses = new Map(
-    (task?.inputResponses || []).map(response => [response.requestId, response])
+  const activeRequests: TaskInputRequest[] = task?.inputRequests ?? []
+  const responses: Map<string, InputResponse> = new Map(
+    (task?.inputResponses ?? []).map((response: InputResponse) => [response.requestId, response])
   )
 
   const submitResponse = useCallback(async (requestId: string, value: unknown): Promise<void> => {

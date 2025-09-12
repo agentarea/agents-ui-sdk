@@ -9,6 +9,9 @@ export * from './components/agent-ui'
 export * from './components/artifacts'
 export * from './components/inputs'
 export * from './components/blocks'
+export * from './components/multi-agent'
+export * from './components/multi-agent/task-tree-list'
+export * from './components/multi-agent/temp-task-graph'
 
 // Export SSR-safe components
 export * from './components/ssr-safe/agent-ui-ssr'
@@ -21,6 +24,7 @@ export * from './hooks/use-connection'
 export * from './hooks/use-realtime'
 export * from './hooks/use-ssr'
 export * from './hooks/use-runtime-environment'
+export * from './hooks/use-delegation'
 
 // Export utilities and configuration
 export * from './lib/dynamic-import'

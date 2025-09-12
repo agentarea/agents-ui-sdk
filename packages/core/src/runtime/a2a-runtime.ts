@@ -1,14 +1,15 @@
 // A2A Protocol runtime implementation
-// Uses official @a2a-js/sdk
+// Refactored to use transport abstraction and agent-card resolver system
 
-import { A2AClient } from '@a2a-js/sdk/client'
-import type { 
-  AgentCard as A2AAgentCard,
-  Message as A2AMessage,
-  Task as A2ATask,
-  MessageSendParams,
-  Part as A2APart
-} from '@a2a-js/sdk'
+// Removed direct dependency on @a2a-js/sdk
+// import { A2AClient } from '@a2a-js/sdk/client'
+// import type { 
+//   AgentCard as A2AAgentCard,
+//   Message as A2AMessage,
+//   Task as A2ATask,
+//   MessageSendParams,
+//   Part as A2APart
+// } from '@a2a-js/sdk'
 import { BaseRuntime } from './base-runtime'
 import type { 
   RuntimeConfig,
@@ -32,13 +33,21 @@ import type {
   ProtocolMessage,
   Subscription,
   TaskUpdateCallback,
-  AgentUpdateCallback
+  AgentUpdateCallback,
+  TaskNode,
+  SubTask,
+  DelegationConfig,
+  DelegationDetails
 } from '../types'
+import type { Transport } from '../transport'
+import { createTransportFactory } from '../transport'
+import type { AgentCardResolver } from '../agent-card'
+import { createAgentCardResolverFactory, createDefaultAgentCardResolver } from '../agent-card'
 
 export interface A2AConfig extends RuntimeConfig {
   agentBaseUrl: string
   authentication?: {
-    type: 'bearer' | 'api-key' | 'oauth' | 'openid'
+    type: 'bearer' | 'api-key' | 'oauth' | 'openid' | 'none'
     token?: string
     apiKey?: string
     config?: Record<string, unknown>
@@ -52,28 +61,56 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
   readonly protocolType = 'a2a' as const
   readonly version = '1.0.0'
   
-  private client: A2AClient
-  private agentCard: A2AAgentCard | null = null
+  private transport!: Transport
+  private agentCard: AgentCard | null = null
   private discoveredAgents: Map<string, AgentCard> = new Map()
+  private agentCardResolver!: AgentCardResolver
 
   constructor(config: A2AConfig) {
     super(config as RuntimeConfig)
-    this.client = new A2AClient(config.agentBaseUrl)
+
+    // Initialize transport from config
+    const tf = createTransportFactory()
+    const transportType = config.transport?.type || 'json-rest'
+    const baseURLCandidate = (config.agentBaseUrl || (config as any).endpoint) as string | undefined
+    if (!baseURLCandidate) {
+      throw new Error('A2ARuntime requires either config.agentBaseUrl or config.endpoint to be provided')
+    }
+    const baseURL = baseURLCandidate
+    const transportConfig = config.transport?.config || {
+      baseURL,
+      timeout: config.timeout,
+      headers: undefined,
+      authentication: config.authentication?.type === 'bearer' && config.authentication.token
+        ? { type: 'bearer', token: config.authentication.token }
+        : config.authentication?.type === 'none'
+        ? { type: 'none' }
+        : undefined
+    }
+
+    this.transport = tf.createTransport(
+      transportType,
+      { ...transportConfig, baseURL: transportConfig.baseURL || baseURL },
+      config.transport?.endpointMapping
+    )
+
+    // Initialize agent card resolver
+    const resolverFactory = createAgentCardResolverFactory()
+    this.agentCardResolver = config.agentCardResolver
+      ? resolverFactory.createResolver(config.agentCardResolver)
+      : createDefaultAgentCardResolver({ type: 'well-known' })
   }
 
   protected initializeProtocolSettings(): void {
-    // A2A-specific initialization
-    if (this.config?.authentication?.type === 'bearer' && this.config.authentication.token) {
-      // Set up authentication headers for A2A client if needed
-      // This would depend on the @a2a-js/sdk implementation
-    }
+    // No-op for transport-based implementation; configs handled in constructor
   }
 
   // Protocol-specific connection implementation
   protected async performConnect(connection: Connection, config: ConnectionConfig): Promise<void> {
     try {
-      // Test connection by fetching agent card
-      this.agentCard = await this.client.getAgentCard()
+      // Test connection by fetching agent card via resolver
+      const endpoint = (this.config?.endpoint as string) || (this.config as A2AConfig).agentBaseUrl
+      this.agentCard = await this.agentCardResolver.resolve(endpoint)
       
       // Update connection with agent information
       connection.agentId = this.agentCard?.name || 'unknown'
@@ -88,7 +125,6 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
   }
 
   protected async performDisconnect(connection: Connection): Promise<void> {
-    // A2A doesn't require explicit disconnection, but we can clean up resources
     if (connection.agentId === this.agentCard?.name) {
       this.agentCard = null
     }
@@ -97,14 +133,9 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
   // A2A-specific agent discovery
   async discoverAgents(endpoint: string): Promise<AgentCard[]> {
     try {
-      // Create a temporary client for discovery
-      const discoveryClient = new A2AClient(endpoint)
-      const agentCard = await discoveryClient.getAgentCard()
-      
-      const mappedCard = this.mapA2AAgentCard(agentCard)
-      this.discoveredAgents.set(endpoint, mappedCard)
-      
-      return [mappedCard]
+      const card = await this.agentCardResolver.resolve(endpoint)
+      this.discoveredAgents.set(endpoint, card)
+      return [card]
     } catch (error) {
       throw new Error(`Failed to discover agents at ${endpoint}: ${(error as Error).message}`)
     }
@@ -117,7 +148,6 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
       throw new Error(`Agent ${agentId} not found in discovered agents`)
     }
 
-    // Return intersection of requested capabilities and agent capabilities
     const agentCapabilities = agent.capabilities.map(cap => cap.name)
     return capabilities.filter(cap => agentCapabilities.includes(cap))
   }
@@ -125,7 +155,6 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
   // A2A message handling
   async handleA2AMessage(message: ProtocolA2AMessage): Promise<void> {
     try {
-      // Process A2A-specific message format
       const processedMessage: ProtocolMessage = {
         id: message.correlationId || message.id,
         type: message.messageType,
@@ -148,13 +177,11 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
   // A2A protocol compliance validation
   async validateA2ACompliance(endpoint: string): Promise<ComplianceResult> {
     try {
-      const client = new A2AClient(endpoint)
-      const agentCard = await client.getAgentCard()
+      const agentCard = await this.agentCardResolver.resolve(endpoint)
       
       const issues: any[] = []
       const supportedFeatures: string[] = []
 
-      // Check required A2A fields
       if (!agentCard.name) {
         issues.push({
           severity: 'error',
@@ -174,26 +201,24 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
       }
 
       // Check capabilities
-      if (agentCard.capabilities) {
-        if (agentCard.capabilities.streaming) {
-          supportedFeatures.push('streaming')
-        }
-        if (agentCard.capabilities.pushNotifications) {
-          supportedFeatures.push('push-notifications')
-        }
+      if (agentCard.streaming) {
+        supportedFeatures.push('streaming')
+      }
+      if (agentCard.pushNotifications) {
+        supportedFeatures.push('push-notifications')
       }
 
-      // Check input/output modes
-      if (agentCard.defaultInputModes && agentCard.defaultInputModes.length > 0) {
+      // Check input/output modes from capabilities
+      if (agentCard.capabilities?.some(c => (c.inputTypes?.length || 0) > 0)) {
         supportedFeatures.push('input-modes')
       }
-      if (agentCard.defaultOutputModes && agentCard.defaultOutputModes.length > 0) {
+      if (agentCard.capabilities?.some(c => (c.outputTypes?.length || 0) > 0)) {
         supportedFeatures.push('output-modes')
       }
 
       return {
         compliant: issues.filter(i => i.severity === 'error').length === 0,
-        version: '1.0.0', // A2A protocol version
+        version: '1.0.0',
         supportedFeatures,
         issues: issues.length > 0 ? issues : undefined
       }
@@ -229,11 +254,11 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
   getSupportedCapabilities(): string[] {
     const capabilities = ['message-sending', 'task-submission']
     
-    if (this.agentCard?.capabilities?.streaming) {
+    if (this.agentCard?.streaming) {
       capabilities.push('streaming')
     }
     
-    if (this.agentCard?.capabilities?.pushNotifications) {
+    if (this.agentCard?.pushNotifications) {
       capabilities.push('push-notifications')
     }
     
@@ -242,18 +267,13 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
 
   // Input request handling for A2A protocol
   async handleInputRequest(taskId: string, response: InputResponse): Promise<void> {
-    // A2A protocol doesn't have built-in input request handling
-    // This would need to be implemented based on the specific A2A agent's capabilities
     throw new Error('Input request handling not implemented for A2A protocol')
   }
 
   // Real-time subscriptions
   subscribeToTask(taskId: string, callback: TaskUpdateCallback): Subscription {
-    // A2A doesn't have built-in real-time subscriptions
-    // This could be implemented using polling or WebSocket extensions
     const subscriptionId = `task-${taskId}-${Date.now()}`
     
-    // Simple polling implementation
     const pollInterval = setInterval(async () => {
       try {
         const task = await this.getTask(taskId)
@@ -266,9 +286,9 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
           error: task.error
         })
       } catch (error) {
-        // Ignore polling errors to avoid spam
+        // ignore
       }
-    }, 5000) // Poll every 5 seconds
+    }, 5000)
 
     return this.createSubscription(subscriptionId, () => {
       clearInterval(pollInterval)
@@ -276,16 +296,14 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
   }
 
   subscribeToAgent(agentId: string, callback: AgentUpdateCallback): Subscription {
-    // A2A doesn't have built-in agent subscriptions
     const subscriptionId = `agent-${agentId}-${Date.now()}`
     
-    // Simple polling implementation for agent status
     const pollInterval = setInterval(async () => {
       try {
         const agentCard = await this.getAgentCard()
         callback({
           agentId,
-          status: 'online', // A2A doesn't provide status, assume online if reachable
+          status: 'online',
           capabilities: agentCard.capabilities,
           metadata: { agentCard },
           timestamp: new Date()
@@ -297,7 +315,7 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
           timestamp: new Date()
         })
       }
-    }, 30000) // Poll every 30 seconds
+    }, 30000)
 
     return this.createSubscription(subscriptionId, () => {
       clearInterval(pollInterval)
@@ -306,76 +324,59 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
 
   // Artifact management
   async downloadArtifact(artifactId: string): Promise<Blob> {
-    // A2A protocol doesn't have built-in artifact download
-    // This would need to be implemented based on the artifact's URL or content
     throw new Error('Artifact download not implemented for A2A protocol')
   }
 
   async uploadArtifact(file: File, metadata?: ArtifactMetadata): Promise<EnhancedArtifact> {
-    // A2A protocol doesn't have built-in artifact upload
-    // This would need to be implemented based on the agent's capabilities
     throw new Error('Artifact upload not implemented for A2A protocol')
   }
 
   // Protocol message handling
   async sendMessage(message: ProtocolMessage, targetAgent: string): Promise<void> {
-    // Convert protocol message to A2A message format
-    const a2aMessage: A2AMessage = {
-      kind: 'message',
-      messageId: message.id,
-      role: 'user',
-      parts: [{
-        text: JSON.stringify(message.payload)
-      } as A2APart]
-    }
-
-    const params: MessageSendParams = {
-      message: a2aMessage,
-      configuration: {
-        blocking: true,
-        acceptedOutputModes: ['message']
+    // For transport abstraction, map to a2a sendMessage RPC or REST endpoint
+    const req = {
+      method: 'message.send',
+      params: {
+        kind: 'message',
+        messageId: message.id,
+        role: 'user',
+        parts: [{ text: JSON.stringify(message.payload) }]
       }
     }
 
-    const response = await this.client.sendMessage(params)
-    
-    if ('error' in response) {
-      throw new Error(`A2A Error: ${response.error.message}`)
+    const res = await this.transport.request(req)
+    if (!res.success) {
+      throw new Error(`A2A Error: ${res.error?.message || 'Unknown error'}`)
     }
   }
 
   async handleProtocolMessage(message: ProtocolMessage): Promise<void> {
-    // Handle incoming protocol messages
-    // This is a base implementation that can be extended
     console.log('Received protocol message:', message)
     
-    // Emit as a task update if it's task-related
     if (message.type === 'task-update' && message.payload) {
       const update = message.payload as TaskUpdate
       this.emitTaskUpdate(update)
     }
   }
 
-
-
   async sendTask(input: TaskInput): Promise<TaskResponse> {
-    const params: MessageSendParams = {
-      message: this.mapToA2AMessage(input.message),
-      configuration: {
-        blocking: true,
-        acceptedOutputModes: ['message', 'task']
+    const req = {
+      method: 'message.send',
+      params: {
+        kind: 'message',
+        messageId: `msg-${Date.now()}`,
+        role: input.message.role,
+        parts: input.message.parts?.map(p => p.type === 'text' ? { text: p.content } : { data: p.content })
       }
     }
 
-    const response = await this.client.sendMessage(params)
-    
-    // Handle different response types
-    if ('error' in response) {
-      throw new Error(`A2A Error: ${response.error.message}`)
+    const res = await this.transport.request<any>(req)
+    if (!res.success) {
+      throw new Error(`A2A Error: ${res.error?.message || 'Unknown error'}`)
     }
 
     return {
-      task: this.mapA2AResponseToTask(response),
+      task: this.mapA2AResponseToTask(res.data),
       streaming: false
     }
   }
@@ -384,53 +385,42 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
     if (!this.supportsStreaming()) {
       throw new Error('Streaming not supported by this agent')
     }
-
-    const params: MessageSendParams = {
-      message: this.mapToA2AMessage(input.message),
-      configuration: {
-        blocking: false,
-        acceptedOutputModes: ['message', 'task']
-      }
-    }
-
-    const streamGenerator = this.client.sendMessageStream(params)
-
-    try {
-      for await (const eventData of streamGenerator) {
-        const update = this.mapA2AEventToTaskUpdate(eventData)
-        this.emitTaskUpdate(update)
-        yield update
-      }
-    } catch (error) {
-      this.emitError(error as Error)
-      throw error
-    }
+    // Streaming not supported by transports in this implementation - could be implemented via SSE/WS later
+    throw new Error('Streaming not supported in current transport implementation')
   }
 
   async getTask(taskId: string): Promise<Task> {
-    const response = await this.client.getTask({ taskId } as any)
-    
-    if ('error' in response) {
-      throw new Error(`A2A Error: ${response.error.message}`)
+    const req = {
+      method: 'task.get',
+      params: { taskId }
     }
 
-    return this.mapA2AResponseToTask(response.result)
+    const res = await this.transport.request<any>(req)
+    if (!res.success) {
+      throw new Error(`A2A Error: ${res.error?.message || 'Unknown error'}`)
+    }
+
+    return this.mapA2AResponseToTask(res.data)
   }
 
   async cancelTask(taskId: string): Promise<void> {
-    const response = await this.client.cancelTask({ taskId } as any)
-    
-    if ('error' in response) {
-      throw new Error(`A2A Error: ${response.error.message}`)
+    const req = {
+      method: 'task.cancel',
+      params: { taskId }
     }
 
+    const res = await this.transport.request(req)
+    if (!res.success) {
+      throw new Error(`A2A Error: ${res.error?.message || 'Unknown error'}`)
+    }
   }
 
   async getAgentCard(): Promise<AgentCard> {
-    if (!this.agentCard) {
-      this.agentCard = await this.client.getAgentCard()
-    }
-    return this.mapA2AAgentCard(this.agentCard!)
+    if (this.agentCard) return this.agentCard
+
+    const endpoint = (this.config?.endpoint as string) || (this.config as A2AConfig).agentBaseUrl
+    this.agentCard = await this.agentCardResolver.resolve(endpoint)
+    return this.agentCard
   }
 
   async getCapabilities(): Promise<Capability[]> {
@@ -439,73 +429,120 @@ export class A2ARuntime extends BaseRuntime implements A2ARuntimeInterface {
   }
 
   supportsStreaming(): boolean {
-    return this.agentCard?.capabilities?.streaming === true
-  }
-
-  private mapToA2AMessage(message: Message): A2AMessage {
-    return {
-      kind: 'message',
-      messageId: `msg-${Date.now()}`,
-      role: message.role,
-      parts: message.parts.map((part: any) => {
-        if (part.type === 'text') {
-          return {
-            text: part.content as string
-          } as A2APart
-        } else if (part.type === 'file') {
-          return {
-            uri: part.content as string,
-            mimeType: part.mimeType
-          } as unknown as A2APart
-        } else {
-          return {
-            data: part.content
-          } as A2APart
-        }
-      })
-    }
+    return this.agentCard?.streaming === true
   }
 
   private mapA2AResponseToTask(result: any): Task {
+    const core = (result?.result) ? result.result : result
     return {
-      id: result.id || result.taskId,
-      contextId: result.contextId,
-      status: result.status || 'submitted',
-      input: result.input || { message: { role: 'user', parts: [] } },
-      artifacts: result.artifacts || [],
-      messages: result.messages || [],
-      progress: result.progress,
-      error: result.error,
-      createdAt: new Date(result.createdAt || Date.now()),
-      updatedAt: new Date(result.updatedAt || Date.now())
+      id: core?.id || core?.taskId || `task-${Date.now()}`,
+      contextId: core?.contextId,
+      status: core?.status || 'submitted',
+      input: core?.input || { message: { role: 'user', parts: [] } },
+      artifacts: core?.artifacts || [],
+      messages: core?.messages || [],
+      progress: core?.progress,
+      error: core?.error,
+      createdAt: new Date(core?.createdAt || Date.now()),
+      updatedAt: new Date(core?.updatedAt || Date.now())
     }
   }
 
-  private mapA2AEventToTaskUpdate(event: any): TaskUpdate {
-    return {
-      taskId: event.taskId,
-      status: event.status,
-      progress: event.progress,
-      artifacts: event.artifacts,
-      messages: event.messages,
-      error: event.error
+  async delegateSubTask(
+    parentTaskId: string,
+    subTasks: SubTask[],
+    config?: DelegationConfig
+  ): Promise<DelegationDetails> {
+    const delegationId = `del_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const parallel = config?.parallel ?? true;
+    const maxDepth = config?.maxDepth ?? 5;
+    const includeLog = config?.contextPassing?.includeLog ?? 5;
+    const artifacts = config?.contextPassing?.artifacts ?? [];
+
+    if (maxDepth <= 0) {
+      throw new Error("Maximum delegation depth exceeded");
+    }
+
+    const details: DelegationDetails = {
+      delegationId,
+      parentTaskId,
+      subTasks: [...subTasks],
+      status: 'pending' as const,
+      config,
+      timestamp: new Date(),
+    };
+
+    this.emit({ type: 'delegation', details, runtime: this });
+
+    try {
+      const parentTask = await this.getTask(parentTaskId);
+      const logSnippet: string[] = []; // Placeholder: recent events as strings
+
+      const subTaskPromises = subTasks.map(async (subTask) => {
+        const baseInput = subTask.input || { message: { role: 'agent' as const, parts: [] } };
+        const enhancedInput: TaskInput = {
+          ...baseInput,
+          metadata: {
+            ...(baseInput.metadata || {}),
+            parentTaskId,
+            delegationId,
+            logContext: logSnippet.slice(-includeLog),
+            artifacts,
+          },
+        };
+
+        this.emit({ type: 'sub-task-started', subTask, delegationId, runtime: this });
+
+        const response = await this.submitTask(enhancedInput);
+
+        this.emit({ type: 'sub-task-completed', subTask, delegationId, runtime: this });
+
+        return { ...subTask, response };
+      });
+
+      if (parallel) {
+        await Promise.all(subTaskPromises);
+      } else {
+        for (const promise of subTaskPromises) {
+          await promise;
+        }
+      }
+
+      details.status = 'completed';
+      details.subTasks = subTasks.map((st) => ({ ...st, status: 'completed' as const }));
+
+      return details;
+    } catch (error) {
+      details.status = 'failed';
+      this.emit({ type: 'delegation-failed', delegationId, error: error as Error, runtime: this });
+      throw error;
     }
   }
 
-  private mapA2AAgentCard(card: A2AAgentCard): AgentCard {
-    return {
-      name: card.name,
-      description: card.description,
-      capabilities: card.skills?.map((skill: any) => ({
-        name: skill.name,
-        description: skill.description,
-        inputTypes: skill.defaultInputModes || card.defaultInputModes || [],
-        outputTypes: skill.defaultOutputModes || card.defaultOutputModes || []
-      })) || [],
-      endpoints: { main: card.url },
-      streaming: card.capabilities?.streaming || false,
-      pushNotifications: card.capabilities?.pushNotifications || false
+  async getDelegationTree(taskId: string): Promise<TaskNode> {
+    const rootTask = await this.getTask(taskId);
+    const rootNode: TaskNode = {
+      id: rootTask.id,
+      description: rootTask.description || rootTask.input?.prompt || 'Root Task',
+      agentId: rootTask.agentId || 'primary',
+      status: rootTask.status as any, // Map to TaskNode status
+      input: rootTask.input,
+      response: rootTask.response,
+      children: [],
+      logSnippet: [], // Fetch from events
+      createdAt: rootTask.createdAt || new Date(),
+      updatedAt: new Date(),
+    };
+
+    const delegations: DelegationDetails[] = []; // Placeholder: fetch from runtime
+    for (const del of delegations) {
+      for (const sub of del.subTasks) {
+        const childNode = await this.getDelegationTree(sub.id);
+        rootNode.children.push(childNode);
+      }
     }
+
+    return rootNode;
   }
 }
 

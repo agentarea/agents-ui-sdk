@@ -13,6 +13,7 @@ import type {
 import { useRuntimeEnvironment } from '../hooks/use-runtime-environment'
 import { AgentProvider } from './providers/agent-provider'
 import { ConfigProvider } from './providers/config-provider'
+import { InputProvider } from './providers/input-provider'
 
 // Main AgentUI configuration interface
 export interface AgentUIProps {
@@ -209,13 +210,18 @@ export function AgentUI({
           data-theme={currentTheme}
           data-debug={debugEnabled}
           data-environment={environment.isNextJS ? 'nextjs' : environment.isVite ? 'vite' : 'react'}
+          suppressHydrationWarning
         >
           {agentRuntime ? (
             <AgentProvider runtime={agentRuntime}>
-              {children}
+              <InputProvider>
+                {children}
+              </InputProvider>
             </AgentProvider>
           ) : (
-            children
+            <InputProvider>
+              {children}
+            </InputProvider>
           )}
         </div>
       </AgentUIContext.Provider>
@@ -236,10 +242,28 @@ export function useAgentUI(): AgentUIContextValue {
 
 // Helper function to create runtime from type string
 function createRuntimeFromType(type: string, config: RuntimeConfig): AgentRuntime | null {
-  // This would typically use the RuntimeFactory from core
-  // For now, return null as the factory implementation is in task 2
-  console.warn(`AgentUI: Runtime creation for type "${type}" not yet implemented. Requires RuntimeFactory from task 2.`)
-  return null
+  try {
+    // Lazily import to avoid circular deps in some bundlers
+    const { createRuntimeFactory } = require('@agentarea/core') as typeof import('@agentarea/core')
+    const factory = createRuntimeFactory()
+
+    // Normalize config to include endpoint/auth if provided
+    const normalizedConfig: RuntimeConfig = {
+      ...config,
+      endpoint: config.endpoint,
+      authentication: config.authentication,
+    }
+
+    if (type === 'a2a' || type === 'agentarea') {
+      return factory.createRuntime(type, normalizedConfig)
+    }
+
+    console.warn(`AgentUI: Unsupported runtime type "${type}". Supported types: 'a2a', 'agentarea'.`)
+    return null
+  } catch (err) {
+    console.error('AgentUI: Failed to create runtime from type:', err)
+    return null
+  }
 }
 
 // AgentUI.Provider - Explicit provider pattern usage
@@ -330,10 +354,14 @@ function AgentUIProvider({
 
   const content = agentRuntime ? (
     <AgentProvider runtime={agentRuntime}>
-      {children}
+      <InputProvider>
+        {children}
+      </InputProvider>
     </AgentProvider>
   ) : (
-    children
+    <InputProvider>
+      {children}
+    </InputProvider>
   )
 
   return (

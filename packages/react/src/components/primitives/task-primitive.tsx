@@ -1,3 +1,5 @@
+"use client"
+
 import { forwardRef, HTMLAttributes, FormHTMLAttributes, ButtonHTMLAttributes, TextareaHTMLAttributes } from 'react'
 import { useTask, useTaskCreation } from '../../hooks/use-task'
 import type { Task, TaskStatus } from '@agentarea/core'

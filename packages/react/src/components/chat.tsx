@@ -118,6 +118,7 @@ const ChatMessage = React.forwardRef<HTMLDivElement, ChatMessageProps>(
                   "text-xs opacity-70 mt-1",
                   isUser ? "text-right" : "text-left"
                 )}
+                suppressHydrationWarning
               >
                 {timestamp.toLocaleTimeString()}
               </div>
@@ -736,7 +737,83 @@ const ChatInputForm = React.forwardRef<HTMLDivElement, ChatInputFormProps>(
 )
 ChatInputForm.displayName = "Chat.InputForm"
 
-// Export as namespace
+// Import Block components and useTask hook
+import { Block } from './blocks'
+import { useTask } from '../hooks/use-task'
+
+// Simple chat component displaying communication blocks
+export interface ChatSimpleProps extends React.HTMLAttributes<HTMLDivElement> {
+  taskId?: string
+  autoScroll?: boolean
+  maxHeight?: string
+  showMetadata?: boolean
+  showTimestamp?: boolean
+  showRouting?: boolean
+  expandable?: boolean
+}
+
+const ChatSimple = React.forwardRef<HTMLDivElement, ChatSimpleProps>(
+  ({ 
+    taskId,
+    autoScroll = true,
+    maxHeight = "400px",
+    showMetadata = true,
+    showTimestamp = true,
+    showRouting = true,
+    expandable = false,
+    className,
+    ...props 
+  }, ref) => {
+    const { communicationBlocks } = useTask(taskId)
+    const scrollRef = React.useRef<HTMLDivElement>(null)
+
+    React.useEffect(() => {
+      if (autoScroll && scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      }
+    })
+
+    return (
+      <div 
+        ref={ref}
+        className={cn(
+          "flex flex-col overflow-hidden border rounded-lg bg-background",
+          className
+        )}
+        style={{ maxHeight, ...props.style }}
+        {...props}
+      >
+        <div 
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto scroll-smooth p-4 space-y-3"
+        >
+          {communicationBlocks.length > 0 ? (
+            communicationBlocks.map((block) => (
+              <Block.Message
+                key={block.id}
+                message={block}
+                showMetadata={showMetadata}
+                showTimestamp={showTimestamp}
+                showRouting={showRouting}
+                expandable={expandable}
+              />
+            ))
+          ) : (
+            <div className="text-center text-muted-foreground py-8">
+              {taskId ? (
+                "No communication blocks available for this task."
+              ) : (
+                "No active task. Create a task to see communication blocks."
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+)
+ChatSimple.displayName = "Chat.Simple"
+
 export const Chat = {
   Root: ChatRoot,
   Message: ChatMessage,
@@ -746,4 +823,5 @@ export const Chat = {
   Input: ChatInput,
   InputForm: ChatInputForm,
   Typing: ChatTyping,
+  Simple: ChatSimple,
 }
