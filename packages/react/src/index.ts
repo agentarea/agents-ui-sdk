@@ -1,3 +1,6 @@
+// Import styles
+import '@agentarea/styles/index.css'
+
 // Export React components and providers
 export * from './components/providers/agent-provider'
 export * from './components/providers/config-provider'

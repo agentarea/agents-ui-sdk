@@ -14,7 +14,9 @@
     },
     "./package.json": "./package.json"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css"
+  ],
   "files": [
     "dist",
     "README.md",
@@ -42,6 +44,7 @@
   },
   "dependencies": {
     "@agentarea/core": "workspace:*",
+    "@agentarea/styles": "workspace:*",
     "@radix-ui/react-progress": "^1.1.0",
     "@radix-ui/react-slot": "^1.1.0",
     "class-variance-authority": "^0.7.1",

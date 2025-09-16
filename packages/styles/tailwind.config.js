@@ -2,7 +2,9 @@
 export default {
   content: [
     '../react/src/**/*.{js,ts,jsx,tsx}',
+    '../react/dist/**/*.{js,ts,jsx,tsx}',
     '../core/src/**/*.{js,ts,jsx,tsx}',
+    '../core/dist/**/*.{js,ts,jsx,tsx}',
     '../../apps/*/src/**/*.{js,ts,jsx,tsx}'
   ],
   theme: {
