@@ -34,6 +34,14 @@ export default {
         accent: {
           DEFAULT: 'hsl(var(--agentarea-accent))',
           foreground: 'hsl(var(--agentarea-accent-foreground))'
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--agentarea-popover))',
+          foreground: 'hsl(var(--agentarea-popover-foreground))'
+        },
+        card: {
+          DEFAULT: 'hsl(var(--agentarea-card))',
+          foreground: 'hsl(var(--agentarea-card-foreground))'
         }
       },
       borderRadius: {

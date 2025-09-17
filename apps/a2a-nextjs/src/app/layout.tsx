@@ -1,6 +1,8 @@
 'use client'
 
 import { Geist, Geist_Mono } from "next/font/google";
+import '@agentarea/styles/index.css';
+import '@agentarea/styles/components.css';
 import "./globals.css";
 import { AgentProvider } from '@agentarea/react';
 
