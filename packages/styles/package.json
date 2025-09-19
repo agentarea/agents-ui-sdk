@@ -20,7 +20,7 @@
   "scripts": {
     "build": "pnpm clean && pnpm build:css && pnpm build:types",
     "build:css": "tailwindcss -i ./src/index.css -o ./dist/index.css --minify && tailwindcss -i ./src/components.css -o ./dist/components.css --minify",
-    "build:types": "cp src/index.d.ts dist/index.d.ts",
+    "build:types": "mkdir -p dist && cp src/index.d.ts dist/index.d.ts",
     "dev": "pnpm build:css --watch",
     "clean": "rm -rf dist",
     "prepublishOnly": "pnpm build"
