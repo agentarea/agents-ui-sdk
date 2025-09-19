@@ -3,6 +3,7 @@ module.exports = {
   content: [
     "./packages/react/src/**/*.{js,ts,jsx,tsx}",
     "./stories/**/*.{js,ts,jsx,tsx}",
+    "./apps/docs/content/**/*.mdx",
   ],
   theme: {
     container: {

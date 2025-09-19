@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react'
 import { FeatureDetection, ArtifactUtils, InputUtils, ErrorMessages } from '../lib/fallback-utils'
 import type { EnhancedArtifact, TaskInputRequest } from '@agentarea/core'

@@ -1,3 +1,5 @@
+"use client"
+
 import { useAgentContext } from '../components/providers/agent-provider'
 import type { AgentRuntime, AgentCard, Capability } from '@agentarea/core'
 

@@ -12,6 +12,15 @@ import type {
   CommunicationBlock,
   AuthConfig
 } from './core'
+// Import transport types for configuration
+import type { 
+  TransportConfig,
+  RestEndpointMapping
+} from '../transport'
+// Import agent card resolver types
+import type {
+  AgentCardResolverConfig
+} from '../agent-card'
 
 // Base AgentRuntime interface with protocol identification
 export interface AgentRuntime {
@@ -61,18 +70,62 @@ export interface AgentRuntime {
 export interface RuntimeConfig {
   endpoint?: string
   authentication?: {
-    type: 'bearer' | 'api-key' | 'oauth' | 'openid'
+    type: 'bearer' | 'api-key' | 'oauth' | 'openid' | 'none'
     token?: string
     apiKey?: string
     config?: Record<string, unknown>
   }
   timeout?: number
   retries?: number
+  // Transport configuration
+  transport?: {
+    type?: 'json-rpc' | 'json-rest'
+    config?: TransportConfig
+    endpointMapping?: RestEndpointMapping
+  }
+  // Agent card resolver configuration
+  agentCardResolver?: AgentCardResolverConfig
   [key: string]: unknown
 }
 
 export interface RuntimeFactory<T extends RuntimeConfig = RuntimeConfig> {
   (config: T): AgentRuntime
+}
+
+export interface TaskNode {
+  id: string;
+  description: string;
+  agentId: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  input?: TaskInput;
+  response?: TaskResponse;
+  children: TaskNode[];
+  logSnippet?: string[]; // Serialized event log for context
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SubTask extends TaskNode {
+  parentId: string;
+  delegationId: string;
+}
+
+export interface DelegationConfig {
+  parallel?: boolean; // Run sub-tasks async
+  maxDepth?: number; // Prevent infinite delegation
+  contextPassing?: {
+    includeLog?: number; // Number of recent events to pass
+    artifacts?: string[]; // Artifact IDs to include
+  };
+}
+
+export interface DelegationDetails {
+  delegationId: string;
+  parentTaskId: string;
+  subTasks: SubTask[];
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  config?: DelegationConfig;
+  timestamp: Date;
 }
 
 // Runtime events
@@ -81,6 +134,10 @@ export type RuntimeEvent =
   | { type: 'disconnected'; runtime: AgentRuntime }
   | { type: 'error'; error: Error; runtime: AgentRuntime }
   | { type: 'task-update'; update: TaskUpdate; runtime: AgentRuntime }
+  | { type: 'delegation'; details: DelegationDetails; runtime: AgentRuntime }
+  | { type: 'sub-task-started'; subTask: SubTask; delegationId: string; runtime: AgentRuntime }
+  | { type: 'sub-task-completed'; subTask: SubTask; delegationId: string; runtime: AgentRuntime }
+  | { type: 'delegation-failed'; delegationId: string; error: Error; runtime: AgentRuntime }
 
 export interface RuntimeEventListener {
   (event: RuntimeEvent): void

@@ -8,6 +8,10 @@ import type {
   TaskInput,
   TaskResponse,
   ProtocolMessage,
+  TaskNode,
+  SubTask,
+  DelegationConfig,
+  DelegationDetails,
 } from "../types";
 import { A2ARuntime, type A2AConfig } from "./a2a-runtime";
 import { AgentAreaRuntime, type AgentAreaConfig } from "./agentarea-runtime";
@@ -30,11 +34,13 @@ export class RuntimeFactory {
   ): AgentRuntime {
     switch (protocolType) {
       case "a2a":
-        return new A2ARuntime(config as A2AConfig);
+        // A2A runtime can be constructed with agentBaseUrl or endpoint.
+        // Pass config through as-is; A2ARuntime handles fallback logic.
+        return new A2ARuntime(config as A2AConfig)
       case "agentarea":
-        return new AgentAreaRuntime(config as AgentAreaConfig);
+        return new AgentAreaRuntime(config as AgentAreaConfig)
       default:
-        throw new Error(`Unsupported protocol type: ${protocolType}`);
+        throw new Error(`Unsupported protocol type: ${protocolType}`)
     }
   }
 
@@ -303,6 +309,116 @@ export class RuntimeManager implements IRuntimeManager {
     }
   }
 
+  async delegateSubTask(
+    parentTaskId: string,
+    subTasks: SubTask[],
+    config?: DelegationConfig
+  ): Promise<DelegationDetails> {
+    if (!this.activeRuntime) {
+      throw new Error("No active runtime available for delegation");
+    }
+
+    const delegationId = `del_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const parallel = config?.parallel ?? true;
+    const maxDepth = config?.maxDepth ?? 5;
+    const includeLog = config?.contextPassing?.includeLog ?? 5;
+    const artifacts = config?.contextPassing?.artifacts ?? [];
+
+    // Validate depth (simplified; in real, check task history)
+    if (maxDepth <= 0) {
+      throw new Error("Maximum delegation depth exceeded");
+    }
+
+    const details: DelegationDetails = {
+      delegationId,
+      parentTaskId,
+      subTasks: [...subTasks],
+      status: 'pending' as const,
+      config,
+      timestamp: new Date(),
+    };
+
+    this.emitEvent({ type: 'delegation-created', details });
+
+    try {
+      // Prepare context for each sub-task (log snippet + artifacts)
+      const parentTask = await this.activeRuntime.getTask(parentTaskId);
+      // Simulate log snippet (in real, fetch from runtime events)
+      const logSnippet: string[] = []; // Placeholder: recent events as strings
+
+      const subTaskPromises = subTasks.map(async (subTask) => {
+        const baseInput = subTask.input || { message: { role: 'agent' as const, parts: [] } };
+        const enhancedInput: TaskInput = {
+          ...baseInput,
+          metadata: {
+            ...(baseInput.metadata || {}),
+            parentTaskId,
+            delegationId,
+            logContext: logSnippet.slice(-includeLog),
+            artifacts,
+          },
+        };
+
+        this.emitEvent({ type: 'sub-task-started', subTask, delegationId });
+
+        const response = await this.activeRuntime!.submitTask(enhancedInput);
+
+        this.emitEvent({ type: 'sub-task-completed', subTask, delegationId });
+
+        return { ...subTask, response };
+      });
+
+      if (parallel) {
+        await Promise.all(subTaskPromises);
+      } else {
+        for (const promise of subTaskPromises) {
+          await promise;
+        }
+      }
+
+      details.status = 'completed';
+      details.subTasks = subTasks.map((st, i) => ({ ...st, status: 'completed' as const }));
+
+      return details;
+    } catch (error) {
+      details.status = 'failed';
+      this.emitEvent({ type: 'delegation-failed', delegationId, error: error as Error });
+      throw error;
+    }
+  }
+
+  async getDelegationTree(taskId: string): Promise<TaskNode> {
+    if (!this.activeRuntime) {
+      throw new Error("No active runtime available");
+    }
+
+    // Fetch root task
+    const rootTask = await this.activeRuntime.getTask(taskId);
+    const rootNode: TaskNode = {
+      id: rootTask.id,
+      description: rootTask.description || rootTask.input?.prompt || 'Root Task',
+      agentId: rootTask.agentId || 'primary',
+      status: 'completed', // Assume; in real, query status
+      input: rootTask.input,
+      response: rootTask.response,
+      children: [],
+      logSnippet: [], // Fetch from events
+      createdAt: rootTask.createdAt || new Date(),
+      updatedAt: new Date(),
+    };
+
+    // Recursively fetch children (simplified; in real, query delegations)
+    const delegations: any[] = []; // Placeholder: fetch from runtime
+    for (const del of delegations) {
+      for (const sub of del.subTasks) {
+        const childNode = await this.getDelegationTree(sub.id);
+        rootNode.children.push(childNode);
+      }
+    }
+
+    return rootNode;
+  }
+
   async broadcastMessage(
     message: ProtocolMessage,
     protocols?: string[]
@@ -464,7 +580,11 @@ export type RuntimeManagerEvent =
       runtimeId: string;
       runtime: AgentRuntime;
       previousRuntime?: AgentRuntime;
-    };
+    }
+  | { type: "delegation-created"; details: DelegationDetails }
+  | { type: "sub-task-started"; subTask: SubTask; delegationId: string }
+  | { type: "sub-task-completed"; subTask: SubTask; delegationId: string }
+  | { type: "delegation-failed"; delegationId: string; error: Error };
 
 export interface RuntimeHealthStatus {
   totalRuntimes: number;

@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useAgentContext } from '../components/providers/agent-provider'
 import type { 

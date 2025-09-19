@@ -23,7 +23,7 @@
   "scripts": {
     "build": "pnpm clean && tsc",
     "dev": "tsc --watch",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
     "type-check": "tsc --noEmit",
     "prepublishOnly": "pnpm build"
   },

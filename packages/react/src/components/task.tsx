@@ -274,6 +274,40 @@ const TaskCancel = React.forwardRef<HTMLButtonElement, TaskCancelProps>(
 )
 TaskCancel.displayName = "Task.Cancel"
 
+// Task retry button
+export interface TaskRetryProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  taskId?: string
+  onRetry?: (taskId: string) => void
+}
+
+const TaskRetry = React.forwardRef<HTMLButtonElement, TaskRetryProps>(
+  ({ taskId, onRetry, onClick, children, ...props }, ref) => {
+    const { task } = useTask(taskId)
+
+    const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (taskId && onRetry) {
+        onRetry(taskId)
+      }
+      onClick?.(e)
+    }
+
+    const canRetry = task?.status === "failed" || task?.status === "canceled"
+
+    return (
+      <Button
+        ref={ref}
+        variant="outline"
+        disabled={!canRetry || !onRetry}
+        onClick={handleClick}
+        {...props}
+      >
+        {children || "Retry"}
+      </Button>
+    )
+  }
+)
+TaskRetry.displayName = "Task.Retry"
+
 // Enhanced task chat interface
 export interface TaskChatProps extends React.HTMLAttributes<HTMLDivElement> {
   taskId?: string
@@ -372,7 +406,7 @@ const TaskChat = React.forwardRef<HTMLDivElement, TaskChatProps>(
               key={index}
               role={message.role}
               avatar={message.role === "agent" ? avatarAgent : avatarUser}
-              timestamp={new Date()}
+              // Avoid SSR mismatch by not rendering dynamic timestamp
             >
               {message.parts.map((part, partIndex) => (
                 <div key={partIndex}>
@@ -430,7 +464,7 @@ const TaskChat = React.forwardRef<HTMLDivElement, TaskChatProps>(
             <Chat.Message
               role="agent"
               avatar={avatarAgent}
-              timestamp={new Date()}
+              // No dynamic timestamp to avoid hydration issues
             >
               <TaskArtifacts
                 artifacts={taskWithInputs.enhancedArtifacts}
@@ -841,6 +875,7 @@ export const Task = {
   Progress: TaskProgress,
   Output: TaskOutput,
   Cancel: TaskCancel,
+  Retry: TaskRetry,
   Chat: TaskChat,
   InputRequest: TaskInputRequest,
   Artifacts: TaskArtifacts,

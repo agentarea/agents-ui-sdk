@@ -111,4 +111,9 @@ temp/
 ehthumbs.db
 Thumbs.db
 
-.kiro
+.claude
+.serena
+
+__pycache__
+
+.turbo

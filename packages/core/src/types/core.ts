@@ -2,7 +2,7 @@
 
 // Re-export AuthConfig from runtime to avoid circular dependencies
 export interface AuthConfig {
-  type: 'bearer' | 'api-key' | 'oauth' | 'openid'
+  type: 'bearer' | 'api-key' | 'oauth' | 'openid' | 'none'
   config?: Record<string, unknown>
 }
 
@@ -19,16 +19,21 @@ export interface MessagePart {
 }
 
 export interface TaskInput {
+  prompt?: string;
   message: Message
   context?: Record<string, unknown>
   capabilities?: string[]
+  metadata?: Record<string, unknown>;
 }
 
 export interface Task {
   id: string
+  description?: string;
+  agentId?: string;
   contextId?: string
   status: TaskStatus
   input: TaskInput
+  response?: TaskResponse;
   artifacts?: Artifact[]
   messages?: Message[]
   progress?: TaskProgress
